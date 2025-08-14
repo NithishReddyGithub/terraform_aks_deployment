@@ -22,3 +22,15 @@ variable "vm_size" {
   description = "VM size for AKS default node pool"
   type        = string
 }
+
+variable "acr_name" {
+  description = "Base name for the Azure Container Registry (must be globally unique)"
+  type        = string
+  default     = "nithishacr"
+}
+
+variable "acr_sku" {
+  description = "SKU for the Azure Container Registry"
+  type        = string
+  default     = "Basic"
+}
