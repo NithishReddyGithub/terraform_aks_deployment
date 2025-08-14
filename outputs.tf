@@ -32,3 +32,7 @@ output "acr_admin_password" {
   value     = azurerm_container_registry.acr.admin_password
   sensitive = true
 }
+
+output "linux_vm_public_ip" {
+  value = azurerm_public_ip.linux_vm_pip.ip_address
+}
