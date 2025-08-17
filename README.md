@@ -1,79 +1,113 @@
-# Terraform AKS Deployment with Azure Storage Backend
+# AKS Deployment Process with Terraform
 
-## 📌 Overview
-This project provisions an **Azure Kubernetes Service (AKS)** cluster with **Azure Monitor** enabled using Terraform.  
-It uses **Azure Storage as a remote backend** to securely store Terraform state files with versioning and locking enabled.
+This document explains the step-by-step process of deploying an **Azure Kubernetes Service (AKS)** cluster with **Azure Monitor enabled** using Terraform.  
 
 ---
 
-## 📂 Project Structure
-.
-├── backend.tf # Backend configuration for Azure Storage
-├── provider.tf # Azure provider setup
-├── variables.tf # Input variable definitions
-├── terraform.tfvars # Variable values (DO NOT commit to git)
-├── outputs.tf # Terraform outputs
-├── aks-terraform-script.tf # AKS + Monitoring resources
-└── .gitignore # Ignore sensitive/local files
+## Prerequisites
+- An active **Azure subscription** (Free Trial or Paid).  
+- **Terraform** installed locally (v1.0+).  
+- **Azure CLI** (`az`) installed and authenticated.  
+  ```sh
+  az login
+  az account set --subscription "<your-subscription-id>"
+  ```
 
+  ---
+  
+# AKS Deployment Steps
+
+## 1. Clone or Create Terraform Project
+Create a directory and add Terraform files:
+- `main.tf` → Contains AKS resource definitions.  
+- `variables.tf` → Contains input variables.  
+- `terraform.tfvars` → Holds values for variables.  
+- `outputs.tf` → Defines cluster output values.  
+- `provider.tf` → Provider and backend configuration.  
 
 ---
 
-## 🛠 Prerequisites
-Before running Terraform, ensure you have:
+## 2. Backend Configuration (Azure Storage)
+We use **Azure Storage Account** for Terraform state storage to enable locking, security, and versioning.  
 
-1. **Azure CLI** installed  
-   ```bash
-   az login
-2. Terraform installed (v1.5+ recommended)
-3. Free or Paid Azure Subscription
-4. Backend Resources (can be created manually in the Azure Portal):
-    Resource Group: tfstate-rg
-    Storage Account: e.g. tfstatelocking
-    Enable Blob Versioning for history
-    Enable Soft Delete for recovery
-    Storage Container: tfstate
+### Steps:
+1. Create a **Resource Group** in Azure Portal.  
+2. Create a **Storage Account** (Standard LRS is sufficient).  
+3. Create a **Blob Container** (e.g., `tfstate`).  
+4. Configure `backend.tf`:  
+   ```hcl
+   terraform {
+     backend "azurerm" {
+       resource_group_name  = "tfstate-rg"
+       storage_account_name = "tfstate<unique>"
+       container_name       = "tfstate"
+       key                  = "aks/terraform.tfstate"
+       use_azuread_auth     = true
+     }
+   }
+   ```
 
-⚙️ Backend Configuration
-backend.tf:
-terraform {
-  backend "azurerm" {
-    resource_group_name  = "tfstate-rg"
-    storage_account_name = "tfstatelocking"
-    container_name       = "tfstate"
-    key                  = "aks/terraform.tfstate"
-    use_azuread_auth     = true
-  }
-}
-Note: Backend values must be hardcoded — Terraform does not allow variables here.
+---
 
-🚀 Deployment Steps
+## 3. Initialize Terraform
+Run the following command:
+```sh
+terraform init
+```
+This initializes the provider and backend state.
 
-Initialize Terraform and configure the backend:
-    terraform init -migrate-state
+---
 
-Review the execution plan:
-    terraform plan
+## 4. Validate & Plan
+Check for errors and see what resources will be created:
+```sh
+terraform validate
+terraform plan -out aks.plan
+```
 
-Apply the changes:
-    terraform apply
+---
 
-Access Outputs (like kubeconfig path):
-    terraform output
+## 5. Apply Deployment
+Execute the plan to provision AKS:
+```sh
+terraform apply "aks.plan"
+```
 
-🔐 Security Considerations
+---
 
-Never commit terraform.tfstate or terraform.tfstate.backup to Git.
-Add to .gitignore:
-*.tfstate
+## 6. Connect to AKS
+
+Once deployment is successful:
+
+```sh
+az aks get-credentials --resource-group <rg-name> --name <aks-cluster-name>
+```
+
+Verify connection:
+
+```sh
+kubectl get nodes
+```
+
+---
+
+## 7. Security Considerations
+
+- Add
+`*.tfstate
 *.tfstate.*
 .terraform/
 .terraform.lock.hcl
 *.tfvars
 *.tfvars.json
-crash.log
+crash.log`
+to `.gitignore`.
+ 
 
-Azure Storage with versioning ensures:
-    Locking (no two people apply changes at the same time)
-    Version History (you can roll back to previous states)
-    Soft Delete (accidental deletions can be recovered)
+## 8. Outputs
+
+Terraform will print outputs such as:
+
+- Cluster Name  
+- Resource Group  
+- Kubernetes Config Path  
