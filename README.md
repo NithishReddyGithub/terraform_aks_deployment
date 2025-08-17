@@ -102,7 +102,8 @@ kubectl get nodes
 *.tfvars.json
 crash.log`
 to `.gitignore`.
- 
+
+ ---
 
 ## 8. Outputs
 
