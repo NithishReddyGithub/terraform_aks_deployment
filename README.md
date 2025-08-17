@@ -111,4 +111,14 @@ Terraform will print outputs such as:
 
 - Cluster Name  
 - Resource Group  
-- Kubernetes Config Path  
+- Kubernetes Config Path
+
+---
+
+## 9. Logs
+
+These are the plan and apply log files:
+
+- [plan.log](./terraform-plan.log) – Contains the output of `terraform plan`
+- [apply.log](./terraform-apply.log) – Contains the output of `terraform apply`
+
